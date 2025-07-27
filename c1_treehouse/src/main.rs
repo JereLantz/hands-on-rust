@@ -3,21 +3,46 @@ use std::io::stdin;
 #[derive(Debug)]
 struct Visitor{
     name: String,
-    greeting: String,
+    action: VisitorAction,
+    age: u8,
 }
 
 impl Visitor {
-    fn new(name: &str, greeting: &str) -> Self{
+    fn new(name: &str, action: VisitorAction, age: u8) -> Self{
         // Koska tässä ei oo puolipistettä, se tarkoittaa "implicit return"
         Self {
             name: name.to_lowercase(),
-            greeting: greeting.to_string()
+            action,
+            age,
         }
     }
 
     fn greet(&self){
-        println!("{}", self.greeting);
+        match &self.action{
+            VisitorAction::Accept => println!("Welcome to the Treehouse, {}", self.name),
+            VisitorAction::AcceptWithNote { note } => {
+                println!("Welcome to the Treehouse, {}", self.name);
+                println!("{}", note);
+                if self.age < 18 {
+                    println!("Do not serve alchohol to {}.", self.name);
+                }
+            },
+            VisitorAction::Probation => {
+                println!("{} is now a probationary member", self.name);
+            },
+            VisitorAction::Refuse => {
+                println!("You are not allowed to enter the Treehouse, {}", self.name)
+            },
+        }
     }
+}
+
+#[derive(Debug)]
+enum VisitorAction {
+    Accept,
+    AcceptWithNote { note: String },
+    Refuse,
+    Probation,
 }
 
 fn ask_for_input() -> String {
@@ -31,8 +56,11 @@ fn ask_for_input() -> String {
 
 fn main() {
     let mut visitor_list = vec![
-        Visitor::new("bob", "Waddup bob"),
-        Visitor::new("ben", "Hey, Ben. How's it hanging?"),
+        Visitor::new("bob",VisitorAction::Accept, 45),
+        Visitor::new("ben", VisitorAction::AcceptWithNote { 
+            note: String::from("Lactose-free milk is in the fridge")
+        }, 15),
+        Visitor::new("Fred", VisitorAction::Refuse, 30),
     ];
 
     loop {
@@ -44,7 +72,7 @@ fn main() {
             break;
         }
 
-        println!("Hello {}", user_name);
+        println!("Hello {}\n", user_name);
 
         let known_visitor = visitor_list.iter().find(|visitor| visitor.name == user_name);
 
@@ -52,9 +80,21 @@ fn main() {
             Some(visitor) => visitor.greet(),
             None => {
                 println!("You are not on the visitors list, so we'll add you there.");
-                println!("how should we greet you in the future?");
-                let greeting = ask_for_input();
-                visitor_list.push(Visitor::new(&user_name, &greeting));
+                println!("Since the Treehouse serves alchohol, we need to ask for your age. How old are you?");
+                let age:u8;
+                loop {
+                    let age_input = ask_for_input();
+                    age = match age_input.parse() {
+                        Ok(age) => age,
+                        Err(_) => {
+                            println!("Please enter a valid age");
+                            continue;
+                        },
+                    };
+
+                    break;
+                }
+                visitor_list.push(Visitor::new(&user_name, VisitorAction::Probation, age));
             },
         }
     }
