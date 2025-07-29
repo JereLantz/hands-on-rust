@@ -73,6 +73,16 @@ impl State {
         ctx.cls();
         ctx.print_centered(5, "You are dead!");
         ctx.print_centered(6, &format!("You earned {} points", self.score));
+        ctx.print_centered(8, "(R) to restart");
+        ctx.print_centered(9, "(Q) to quit");
+
+        if let Some(key) = ctx.key{
+            match key {
+                VirtualKeyCode::R => self.restart(),
+                VirtualKeyCode::Q => ctx.quit(),
+                _ => {},
+            }
+        }
     }
 
     fn restart(&mut self) {
